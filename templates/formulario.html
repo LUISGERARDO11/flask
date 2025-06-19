@@ -1,10 +1,282 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Clasificador de Insectos</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #121212 0%, #1e1e1e 100%);
+            color: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(40, 40, 40, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            padding: 48px 40px;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .container:hover {
+            transform: translateY(-2px);
+        }
+
+        h1 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, #1db954, #1ed760);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        h1::before {
+            content: '🦗 ';
+        }
+
+        #formulario {
+            width: 100%;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            margin-top: 24px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #ffffff;
+        }
+
+        label:first-of-type {
+            margin-top: 0;
+        }
+
+        .input-wrapper {
+            position: relative;
+            margin-bottom: 16px;
+        }
+
+        #abdomen, #antena {
+            width: 100%;
+            padding: 16px 50px 16px 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            color: #ffffff;
+            font-size: 16px;
+            font-weight: 400;
+            transition: all 0.3s ease;
+            outline: none;
+            box-sizing: border-box;
+        }
+
+        #abdomen:focus, #antena:focus {
+            border-color: #1db954;
+            background: rgba(255, 255, 255, 0.08);
+            box-shadow: 0 0 0 3px rgba(29, 185, 84, 0.1);
+        }
+
+        #abdomen::placeholder, #antena::placeholder {
+            color: #6a6a6a;
+        }
+
+        .unit {
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #b3b3b3;
+            font-size: 14px;
+            font-weight: 400;
+            pointer-events: none;
+        }
+
+        input[type="submit"] {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #1db954, #1ed760);
+            border: none;
+            border-radius: 50px;
+            color: #000000;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 24px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        input[type="submit"]:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 25px rgba(29, 185, 84, 0.3);
+        }
+
+        input[type="submit"]:active {
+            transform: translateY(0);
+        }
+
+        input[type="submit"]:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        #resultado {
+            margin-top: 32px;
+            padding: 24px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 18px;
+            font-weight: 500;
+            text-align: center;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.4s ease;
+        }
+
+        #resultado:not(:empty) {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        #resultado::before {
+            content: '';
+            margin-right: 12px;
+            font-size: 32px;
+        }
+
+        /* Animación para cuando aparece contenido relacionado con chicharra */
+        #resultado[data-type="chicharra"]::before {
+            content: '🦗';
+        }
+
+        /* Animación para cuando aparece contenido relacionado con saltamontes */
+        #resultado[data-type="saltamontes"]::before {
+            content: '🦟';
+        }
+
+        /* Animación para errores */
+        #resultado[data-type="error"]::before {
+            content: '⚠️';
+        }
+
+        .loading {
+            display: none;
+            justify-content: center;
+            align-items: center;
+            margin-top: 20px;
+            color: #b3b3b3;
+        }
+
+        .loading.show {
+            display: flex;
+        }
+
+        .spinner {
+            width: 24px;
+            height: 24px;
+            border: 2px solid rgba(29, 185, 84, 0.3);
+            border-top: 2px solid #1db954;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 12px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 32px 24px;
+                margin: 20px 10px;
+            }
+            
+            h1 {
+                font-size: 24px;
+            }
+        }
+
+        /* Efectos de micro-interacciones */
+        #abdomen:valid, #antena:valid {
+            border-color: rgba(29, 185, 84, 0.5);
+        }
+
+        .ripple {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(0);
+            animation: ripple-animation 0.6s linear;
+            pointer-events: none;
+        }
+
+        @keyframes ripple-animation {
+            to {
+                transform: scale(4);
+                opacity: 0;
+            }
+        }
+
+        /* Wrapper para los inputs con unidades */
+        .input-wrapper::after {
+            content: 'mm';
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #b3b3b3;
+            font-size: 14px;
+            font-weight: 400;
+            pointer-events: none;
+        }
+    </style>
     <script>
         function clasificarInsecto(event) {
             event.preventDefault();
+            
+            // Mostrar loading
+            const loadingDiv = document.createElement('div');
+            loadingDiv.className = 'loading show';
+            loadingDiv.innerHTML = '<div class="spinner"></div><span>Analizando datos...</span>';
+            document.getElementById('formulario').appendChild(loadingDiv);
+            
+            // Deshabilitar botón
+            const submitBtn = document.querySelector('input[type="submit"]');
+            submitBtn.disabled = true;
+            
+            // Limpiar resultado anterior
+            const resultado = document.getElementById("resultado");
+            resultado.innerText = '';
+            resultado.removeAttribute('data-type');
+            
             const abdomen = document.getElementById("abdomen").value;
             const antena = document.getElementById("antena").value;
 
@@ -17,17 +289,88 @@
             })
             .then(response => response.json())
             .then(data => {
+                // Remover loading
+                loadingDiv.remove();
+                submitBtn.disabled = false;
+                
                 if (data.error) {
-                    document.getElementById("resultado").innerText = 'Error: ' + data.error;
+                    resultado.innerText = 'Error: ' + data.error;
+                    resultado.setAttribute('data-type', 'error');
                 } else {
-                    document.getElementById("resultado").innerText = 'El insecto es un/a ' + data.categoria;
+                    resultado.innerText = 'El insecto es un/a ' + data.categoria;
+                    resultado.setAttribute('data-type', data.categoria.toLowerCase());
                 }
             })
             .catch(error => {
-                document.getElementById("resultado").innerText = 'Error en la solicitud.';
+                // Remover loading
+                loadingDiv.remove();
+                submitBtn.disabled = false;
+                
+                resultado.innerText = 'Error en la solicitud.';
+                resultado.setAttribute('data-type', 'error');
                 console.error("Error:", error);
             });
         }
+
+        // Agregar efectos cuando el DOM esté listo
+        document.addEventListener('DOMContentLoaded', function() {
+            // Crear wrapper div para el contenido
+            const body = document.body;
+            const container = document.createElement('div');
+            container.className = 'container';
+            
+            // Mover todo el contenido actual al container
+            while (body.firstChild) {
+                container.appendChild(body.firstChild);
+            }
+            body.appendChild(container);
+            
+            // Crear wrappers para los inputs
+            const abdomenInput = document.getElementById('abdomen');
+            const antenaInput = document.getElementById('antena');
+            
+            [abdomenInput, antenaInput].forEach(input => {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'input-wrapper';
+                input.parentNode.insertBefore(wrapper, input);
+                wrapper.appendChild(input);
+                
+                // Agregar placeholder
+                input.placeholder = 'Ingresa la medida';
+            });
+            
+            // Efecto ripple en el botón
+            document.querySelector('input[type="submit"]').addEventListener('click', function(e) {
+                const ripple = document.createElement('span');
+                const rect = this.getBoundingClientRect();
+                const size = Math.max(rect.width, rect.height);
+                const x = e.clientX - rect.left - size / 2;
+                const y = e.clientY - rect.top - size / 2;
+                
+                ripple.style.width = ripple.style.height = size + 'px';
+                ripple.style.left = x + 'px';
+                ripple.style.top = y + 'px';
+                ripple.classList.add('ripple');
+                
+                this.appendChild(ripple);
+                
+                setTimeout(() => {
+                    ripple.remove();
+                }, 600);
+            });
+
+            // Validación en tiempo real
+            const inputs = [abdomenInput, antenaInput];
+            inputs.forEach(input => {
+                input.addEventListener('input', function() {
+                    if (this.value && parseFloat(this.value) > 0) {
+                        this.style.borderColor = 'rgba(29, 185, 84, 0.5)';
+                    } else {
+                        this.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+                    }
+                });
+            });
+        });
     </script>
 </head>
 <body>
